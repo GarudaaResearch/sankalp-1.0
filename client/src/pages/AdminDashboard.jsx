@@ -18,7 +18,7 @@ const mockData = [
   { id: 8, teamName: 'HealthBridge', track: 'Healthcare & Wellness', leader: 'Ananya K', email: 'ananya@example.com', college: 'Madras Medical', members: 4, fee: 0, status: 'pending', date: '2026-04-16', disabled: true },
 ];
 
-const ADMIN_PASS = 'sankalp2026';
+const ADMIN_PASS = ':@dmin_2026_sankalp123';
 
 const statusColors = {
   approved: { bg: '#f0fdf4', text: '#16a34a', dot: '#22c55e' },
