@@ -1,0 +1,48 @@
+.floating-home {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--transition-slow);
+  transform: translateY(20px);
+}
+
+.floating-home.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.floating-home-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.floating-home-btn:hover {
+  background-color: var(--primary-light);
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 12px 30px rgba(30, 58, 138, 0.4);
+}
+
+@media (max-width: 768px) {
+  .floating-home {
+    bottom: 20px;
+    right: 20px;
+  }
+  .floating-home-btn {
+    width: 45px;
+    height: 45px;
+  }
+}

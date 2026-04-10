@@ -1,0 +1,248 @@
+.track-info-page {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+.track-info-hero {
+  background: var(--track-bg);
+  padding: 80px 0 60px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.track-info-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--track-color) 0%, transparent 70%);
+  opacity: 0.1;
+  border-radius: 50%;
+}
+
+.track-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--track-color);
+  font-weight: 600;
+  text-decoration: none;
+  margin-bottom: 32px;
+  font-size: 14px;
+  transition: var(--transition);
+}
+
+.track-back-link:hover {
+  transform: translateX(-4px);
+}
+
+.track-hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.track-hero-icon {
+  color: var(--track-color);
+  background: white;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.track-hero-title {
+  font-size: 42px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.track-hero-subtitle {
+  font-size: 18px;
+  color: var(--text-secondary);
+  max-width: 600px;
+}
+
+.track-info-body {
+  padding: 60px 0;
+}
+
+.track-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 48px;
+}
+
+.track-section {
+  margin-bottom: 48px;
+}
+
+.track-section h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  position: relative;
+  padding-left: 16px;
+}
+
+.track-section h3::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  background: var(--track-color);
+  border-radius: var(--radius-full);
+}
+
+.track-long-desc {
+  font-size: 17px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.focus-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.focus-card {
+  display: flex;
+  gap: 16px;
+  background: var(--surface);
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+.focus-card:hover {
+  border-color: var(--track-color);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.focus-icon {
+  color: var(--track-color);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.focus-card h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.focus-card p {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.project-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.project-list li {
+  background: var(--bg-section);
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.project-list li::before {
+  content: '👉';
+  font-size: 14px;
+}
+
+.sidebar-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.sidebar-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.criteria-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.criteria-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+}
+
+.criteria-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.criteria-val {
+  font-weight: 800;
+  color: var(--track-color);
+}
+
+.sidebar-cta {
+  background: #0f172a;
+  color: white;
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  text-align: center;
+}
+
+.sidebar-cta h3 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.sidebar-cta p {
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+@media (max-width: 1000px) {
+  .track-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .track-hero-title {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 600px) {
+  .focus-grid {
+    grid-template-columns: 1fr;
+  }
+}
