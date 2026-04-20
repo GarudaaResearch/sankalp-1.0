@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Send, Users, User, AlertCircle, CheckCircle2 } from 'lucide-react';
+import paymentQR from '../assets/payment_qr.jpg';
 import './Registration.css';
 
 const tracks = [
@@ -279,7 +280,7 @@ export default function Registration() {
                   <h4>💳 Official Payment Details</h4>
                   <div className="payment-details-grid">
                     <div className="payment-qr-wrap">
-                      <img src="/src/assets/payment_qr.jpg" alt="Payment QR Code" className="payment-qr" />
+                      <img src={paymentQR} alt="Payment QR Code" className="payment-qr" />
                     </div>
                     <div className="payment-text-info">
                       <div className="payment-field">
