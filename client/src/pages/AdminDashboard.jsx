@@ -231,7 +231,7 @@ export default function AdminDashboard() {
                     <th>Track</th>
                     <th>Leader</th>
                     <th>College</th>
-                    <th className="center">Idea</th>
+                    <th className="center">Pitch URL</th>
                     <th className="center">Payment</th>
                     <th>Status</th>
                     <th>Actions</th>
