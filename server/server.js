@@ -67,10 +67,6 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
   fileFilter: (req, file, cb) => {
     const ext = file.originalname.split('.').pop().toLowerCase();
-    if (file.fieldname === 'ideaFile') {
-      if (['pdf', 'ppt', 'pptx'].includes(ext)) return cb(null, true);
-      return cb(new Error('Only PDF and PPT/PPTX allowed for ideas.'));
-    }
     if (file.fieldname === 'paymentProof') {
       if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) return cb(null, true);
       return cb(new Error('Only JPG, PNG, WEBP allowed for payment proof.'));
@@ -109,7 +105,6 @@ app.get('/api/registrations', async (req, res) => {
 app.post(
   '/api/register',
   upload.fields([
-    { name: 'ideaFile',     maxCount: 1 },
     { name: 'paymentProof', maxCount: 1 },
   ]),
   async (req, res) => {
@@ -117,21 +112,13 @@ app.post(
       const {
         teamName, track, leaderName, leaderEmail, leaderPhone,
         leaderCollege, member2, member3, member4,
-        ideaTitle, ideaBrief, disabilityProof, disabled,
+        ideaTitle, ideaBrief, ideaFile, disabilityProof, disabled,
         transactionId, paymentDate, payerName,
       } = req.body;
 
       // Upload files to Cloudinary if provided
-      let ideaFileUrl     = null;
+      let ideaFileUrl     = ideaFile || null;
       let paymentProofUrl = null;
-
-      if (req.files?.['ideaFile']?.[0]) {
-        ideaFileUrl = await uploadToCloudinary(
-          req.files['ideaFile'][0].buffer,
-          'rcas-sankalp/ideas',
-          'raw'
-        );
-      }
       if (req.files?.['paymentProof']?.[0]) {
         paymentProofUrl = await uploadToCloudinary(
           req.files['paymentProof'][0].buffer,

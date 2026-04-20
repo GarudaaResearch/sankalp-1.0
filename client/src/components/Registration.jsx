@@ -14,12 +14,11 @@ export default function Registration() {
   const [isDisabled, setIsDisabled] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [file, setFile] = useState(null);
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [form, setForm] = useState({
     teamName: '', track: '', leaderName: '', leaderEmail: '', leaderPhone: '',
     leaderCollege: '', member2: '', member3: '', member4: '',
-    ideaTitle: '', ideaBrief: '', disabilityProof: '',
+    ideaTitle: '', ideaBrief: '', ideaFile: '', disabilityProof: '',
     transactionId: '', paymentDate: '', payerName: '',
   });
 
@@ -35,14 +34,7 @@ export default function Registration() {
       }
       const ext = selectedFile.name.split('.').pop().toLowerCase();
       
-      if (type === 'idea') {
-        if (!['pdf', 'ppt', 'pptx'].includes(ext)) {
-          alert('Invalid file type. Only PDF and PPT are allowed.');
-          e.target.value = null;
-          return;
-        }
-        setFile(selectedFile);
-      } else if (type === 'payment') {
+      if (type === 'payment') {
         if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
           alert('Invalid image type. Only JPG, PNG, and WEBP are allowed.');
           e.target.value = null;
@@ -70,9 +62,6 @@ export default function Registration() {
       formData.append('disabled', isDisabled);
       formData.append('mode', mode);
       
-      if (file) {
-        formData.append('ideaFile', file);
-      }
       if (paymentScreenshot) {
         formData.append('paymentProof', paymentScreenshot);
       }
@@ -262,8 +251,8 @@ export default function Registration() {
             </div>
 
             <div className="form-group">
-              <label>Upload Idea / Presentation <span className="label-hint">(PDF or PPT, max 10MB)</span></label>
-              <input type="file" accept=".pdf,.ppt,.pptx" onChange={e => handleFileChange(e, 'idea')} />
+              <label>Idea / Project Pitch URL <span className="label-hint">(Google Form / Drive link)</span></label>
+              <input type="url" placeholder="https://..." value={form.ideaFile} onChange={e => set('ideaFile', e.target.value)} />
               <span className="input-hint">Highly recommended to help us understand your project better.</span>
             </div>
 

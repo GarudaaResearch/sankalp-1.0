@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users, FileText, CheckCircle, Clock, XCircle,
-  Download, Search, Filter, Eye, LogOut, BarChart2
+  Download, Search, Filter, Eye, LogOut, BarChart2, ExternalLink
 } from 'lucide-react';
 import './AdminDashboard.css';
 
@@ -264,9 +264,9 @@ export default function AdminDashboard() {
                               target="_blank" 
                               rel="noreferrer"
                               className="file-link"
-                              title="View Presentation"
+                              title="View Pitch Link"
                             >
-                              <FileText size={18} />
+                              <ExternalLink size={18} />
                             </a>
                           ) : (
                             <span className="no-file">—</span>
@@ -416,7 +416,7 @@ export default function AdminDashboard() {
               <div className="detail-divider">Attachments</div>
               {selected.ideaFile && (
                 <div className="detail-row">
-                  <span className="detail-key">Idea Presentation</span>
+                  <span className="detail-key">Idea Pitch Link</span>
                   <span className="detail-val">
                     <a 
                       href={selected.ideaFile} 
@@ -425,7 +425,7 @@ export default function AdminDashboard() {
                       className="btn-link"
                       style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'underline' }}
                     >
-                      View Presentation
+                      View Pitch Link
                     </a>
                   </span>
                 </div>
