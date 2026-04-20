@@ -260,7 +260,7 @@ export default function AdminDashboard() {
                         <td className="center">
                           {r.ideaFile ? (
                             <a 
-                              href={`${import.meta.env.VITE_API_URL}/uploads/${r.ideaFile}`} 
+                              href={r.ideaFile} 
                               target="_blank" 
                               rel="noreferrer"
                               className="file-link"
@@ -275,7 +275,7 @@ export default function AdminDashboard() {
                         <td className="center">
                           {r.paymentProof ? (
                             <a 
-                              href={`${import.meta.env.VITE_API_URL}/uploads/${r.paymentProof}`} 
+                              href={r.paymentProof} 
                               target="_blank" 
                               rel="noreferrer"
                               className="file-link payment-link"
@@ -419,7 +419,7 @@ export default function AdminDashboard() {
                   <span className="detail-key">Idea Presentation</span>
                   <span className="detail-val">
                     <a 
-                      href={`${import.meta.env.VITE_API_URL}/uploads/${selected.ideaFile}`} 
+                      href={selected.ideaFile} 
                       target="_blank" 
                       rel="noreferrer"
                       className="btn-link"
@@ -435,7 +435,7 @@ export default function AdminDashboard() {
                   <span className="detail-key">Payment Proof</span>
                   <span className="detail-val">
                     <a 
-                      href={`${import.meta.env.VITE_API_URL}/uploads/${selected.paymentProof}`} 
+                      href={selected.paymentProof} 
                       target="_blank" 
                       rel="noreferrer"
                       className="btn-link"

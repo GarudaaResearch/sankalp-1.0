@@ -328,11 +328,19 @@ export default function Registration() {
 
             <button type="submit" className="btn btn-primary submit-btn" disabled={loading}>
               {loading ? (
-                <span className="spinner" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="spinner" /> 
+                  <span>Uploading Details...</span>
+                </div>
               ) : (
                 <><Send size={16} /> Submit Registration</>
               )}
             </button>
+            {loading && (
+              <p style={{ textAlign: 'center', fontSize: '13px', color: 'var(--text-secondary)', marginTop: '12px' }}>
+                Please do not refresh. Uploading files may take a few moments...
+              </p>
+            )}
           </form>
         </div>
       </div>

@@ -1,191 +1,204 @@
-const express = require('express');
-const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-const multer = require('multer');
-const fs = require('fs');
+const express   = require('express');
+const cors      = require('cors');
+const { Pool }  = require('pg');
+const multer    = require('multer');
+const cloudinary = require('cloudinary').v2;
 require('dotenv').config();
 
-const app = express();
+const app  = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Multer Storage Configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
+// ── Cloudinary ───────────────────────────────────────────────────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// ── Middleware ────────────────────────────────────────────────────────────────
+app.use(cors());
+app.use(express.json());
+
+// ── PostgreSQL Pool ───────────────────────────────────────────────────────────
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+});
+
+// ── DB Init ───────────────────────────────────────────────────────────────────
+async function createTable() {
+  const query = `
+    CREATE TABLE IF NOT EXISTS registrations (
+      id               SERIAL PRIMARY KEY,
+      "teamName"       TEXT,
+      track            TEXT,
+      "leaderName"     TEXT,
+      "leaderEmail"    TEXT,
+      "leaderPhone"    TEXT,
+      "leaderCollege"  TEXT,
+      member2          TEXT,
+      member3          TEXT,
+      member4          TEXT,
+      "ideaTitle"      TEXT,
+      "ideaBrief"      TEXT,
+      "ideaFile"       TEXT,
+      "disabilityProof" TEXT,
+      disabled         INTEGER DEFAULT 0,
+      "transactionId"  TEXT,
+      "paymentDate"    TEXT,
+      "payerName"      TEXT,
+      "paymentProof"   TEXT,
+      status           TEXT DEFAULT 'pending',
+      "createdAt"      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+  try {
+    await pool.query(query);
+    console.log('Registrations table ready.');
+  } catch (err) {
+    console.error('Error creating table:', err.message);
+  }
+}
+createTable();
+
+// ── Multer (memory storage → Cloudinary) ─────────────────────────────────────
 const upload = multer({
-  storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
   fileFilter: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
+    const ext = file.originalname.split('.').pop().toLowerCase();
     if (file.fieldname === 'ideaFile') {
-      const allowed = ['.pdf', '.ppt', '.pptx'];
-      if (allowed.includes(ext)) return cb(null, true);
+      if (['pdf', 'ppt', 'pptx'].includes(ext)) return cb(null, true);
       return cb(new Error('Only PDF and PPT/PPTX allowed for ideas.'));
     }
     if (file.fieldname === 'paymentProof') {
-      const allowed = ['.jpg', '.jpeg', '.png', '.webp'];
-      if (allowed.includes(ext)) return cb(null, true);
-      return cb(new Error('Only Images (JPG, PNG, WEBP) allowed for payment proof.'));
+      if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) return cb(null, true);
+      return cb(new Error('Only JPG, PNG, WEBP allowed for payment proof.'));
     }
     cb(null, true);
-  }
+  },
 });
 
-// Database Setup
-const dbPath = path.resolve(__dirname, 'database.sqlite');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error opening database:', err.message);
-  } else {
-    console.log('Connected to SQLite database.');
-    createTable();
-  }
-});
-
-function createTable() {
-  const query = `
-    CREATE TABLE IF NOT EXISTS registrations (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      teamName TEXT,
-      track TEXT,
-      leaderName TEXT,
-      leaderEmail TEXT,
-      leaderPhone TEXT,
-      leaderCollege TEXT,
-      member2 TEXT,
-      member3 TEXT,
-      member4 TEXT,
-      ideaTitle TEXT,
-      ideaBrief TEXT,
-      ideaFile TEXT,
-      disabilityProof TEXT,
-      disabled INTEGER DEFAULT 0,
-      transactionId TEXT,
-      paymentDate TEXT,
-      payerName TEXT,
-      paymentProof TEXT,
-      status TEXT DEFAULT 'pending',
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `;
-  db.run(query, (err) => {
-    if (err) console.error('Error creating table:', err.message);
-    else {
-      console.log('Registrations table ready.');
-      // Add columns if they don't exist
-      const cols = [
-        'ideaFile TEXT',
-        'transactionId TEXT',
-        'paymentDate TEXT',
-        'payerName TEXT',
-        'paymentProof TEXT'
-      ];
-      cols.forEach(col => {
-        db.run(`ALTER TABLE registrations ADD COLUMN ${col}`, (err) => {
-          if (err && !err.message.includes('duplicate column name')) {
-            console.error(`Error adding column ${col}:`, err.message);
-          }
-        });
-      });
-    }
+// Helper: upload buffer → Cloudinary, return secure_url
+function uploadToCloudinary(buffer, folder, resourceType = 'raw') {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: resourceType },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result.secure_url);
+      }
+    );
+    stream.end(buffer);
   });
 }
 
-// API Routes
+// ── Routes ────────────────────────────────────────────────────────────────────
 
 // GET all registrations
-app.get('/api/registrations', (req, res) => {
-  const query = `SELECT * FROM registrations ORDER BY id DESC`;
-  db.all(query, [], (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json(rows);
-  });
+app.get('/api/registrations', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM registrations ORDER BY id DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// POST new registration (Handles Multiple Files)
-app.post('/api/register', upload.fields([
-  { name: 'ideaFile', maxCount: 1 },
-  { name: 'paymentProof', maxCount: 1 }
-]), (req, res) => {
-  const {
-    teamName, track, leaderName, leaderEmail, leaderPhone,
-    leaderCollege, member2, member3, member4,
-    ideaTitle, ideaBrief, disabilityProof, disabled, 
-    transactionId, paymentDate, payerName
-  } = req.body;
+// POST new registration
+app.post(
+  '/api/register',
+  upload.fields([
+    { name: 'ideaFile',     maxCount: 1 },
+    { name: 'paymentProof', maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const {
+        teamName, track, leaderName, leaderEmail, leaderPhone,
+        leaderCollege, member2, member3, member4,
+        ideaTitle, ideaBrief, disabilityProof, disabled,
+        transactionId, paymentDate, payerName,
+      } = req.body;
 
-  const ideaFile = req.files['ideaFile'] ? req.files['ideaFile'][0].filename : null;
-  const paymentProof = req.files['paymentProof'] ? req.files['paymentProof'][0].filename : null;
+      // Upload files to Cloudinary if provided
+      let ideaFileUrl     = null;
+      let paymentProofUrl = null;
 
-  const query = `
-    INSERT INTO registrations (
-      teamName, track, leaderName, leaderEmail, leaderPhone,
-      leaderCollege, member2, member3, member4,
-      ideaTitle, ideaBrief, ideaFile, disabilityProof, disabled,
-      transactionId, paymentDate, payerName, paymentProof
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+      if (req.files?.['ideaFile']?.[0]) {
+        ideaFileUrl = await uploadToCloudinary(
+          req.files['ideaFile'][0].buffer,
+          'rcas-sankalp/ideas',
+          'raw'
+        );
+      }
+      if (req.files?.['paymentProof']?.[0]) {
+        paymentProofUrl = await uploadToCloudinary(
+          req.files['paymentProof'][0].buffer,
+          'rcas-sankalp/payments',
+          'image'
+        );
+      }
 
-  const params = [
-    teamName, track, leaderName, leaderEmail, leaderPhone,
-    leaderCollege, member2, member3, member4,
-    ideaTitle, ideaBrief, ideaFile, disabilityProof, disabled === 'true' || disabled === 1 ? 1 : 0,
-    transactionId || null, paymentDate || null, payerName || null, paymentProof
-  ];
+      const query = `
+        INSERT INTO registrations (
+          "teamName", track, "leaderName", "leaderEmail", "leaderPhone",
+          "leaderCollege", member2, member3, member4,
+          "ideaTitle", "ideaBrief", "ideaFile", "disabilityProof", disabled,
+          "transactionId", "paymentDate", "payerName", "paymentProof"
+        ) VALUES (
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
+        )
+        RETURNING id
+      `;
 
-  db.run(query, params, function(err) {
-    if (err) {
+      const params = [
+        teamName, track, leaderName, leaderEmail, leaderPhone,
+        leaderCollege,
+        member2  || null,
+        member3  || null,
+        member4  || null,
+        ideaTitle, ideaBrief,
+        ideaFileUrl,
+        disabilityProof || null,
+        disabled === 'true' || disabled === '1' ? 1 : 0,
+        transactionId   || null,
+        paymentDate     || null,
+        payerName       || null,
+        paymentProofUrl,
+      ];
+
+      const result = await pool.query(query, params);
+      res.status(201).json({ message: 'Registration successful', id: result.rows[0].id });
+    } catch (err) {
       res.status(500).json({ error: err.message });
-      return;
     }
-    res.status(201).json({ 
-      message: 'Registration successful',
-      id: this.lastID 
-    });
-  });
-});
+  }
+);
 
-// PATCH update registration status
-app.patch('/api/registrations/:id', (req, res) => {
+// PATCH update status
+app.patch('/api/registrations/:id', async (req, res) => {
   const { status } = req.body;
-  const { id } = req.params;
-
-  const query = `UPDATE registrations SET status = ? WHERE id = ?`;
-  db.run(query, [status, id], function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    if (this.changes === 0) {
-      res.status(404).json({ message: 'Registration not found' });
-      return;
+  const { id }     = req.params;
+  try {
+    const result = await pool.query(
+      'UPDATE registrations SET status = $1 WHERE id = $2',
+      [status, id]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Registration not found' });
     }
     res.json({ message: 'Status updated successfully' });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Health check
 app.get('/', (req, res) => {
-  res.send('RCAS Hackathon Backend Running');
+  res.send('RCAS Hackathon Backend Running ✅');
 });
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
