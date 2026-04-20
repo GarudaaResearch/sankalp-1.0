@@ -1,10 +1,12 @@
 const express   = require('express');
 const cors      = require('cors');
 const { Pool }  = require('pg');
+const multer    = require('multer');
 require('dotenv').config();
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
+const upload = multer();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(cors());
@@ -67,7 +69,7 @@ app.get('/api/registrations', async (req, res) => {
 });
 
 // POST new registration
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', upload.none(), async (req, res) => {
     try {
       const {
         teamName, track, leaderName, leaderEmail, leaderPhone,
@@ -100,7 +102,7 @@ app.post('/api/register', async (req, res) => {
         ideaTitle, ideaBrief,
         ideaFileUrl,
         disabilityProof || null,
-        disabled === 'true' || disabled === '1' ? 1 : 0,
+        disabled === 'true' || disabled === '1' || disabled === true ? 1 : 0,
         transactionId   || null,
         paymentDate     || null,
         payerName       || null,
