@@ -278,10 +278,10 @@ export default function AdminDashboard() {
                               href={r.paymentProof} 
                               target="_blank" 
                               rel="noreferrer"
-                              className="file-link payment-link"
-                              title={`TXN: ${r.transactionId}`}
+                              className="file-link"
+                              title="View Payment Screenshot"
                             >
-                              <CheckCircle size={18} style={{ color: '#16a34a' }} />
+                              <ExternalLink size={18} />
                             </a>
                           ) : (
                             <span className="no-file">{r.disabled ? 'N/A' : '—'}</span>
@@ -432,7 +432,7 @@ export default function AdminDashboard() {
               )}
               {selected.paymentProof && (
                 <div className="detail-row">
-                  <span className="detail-key">Payment Proof</span>
+                  <span className="detail-key">Payment Screenshot</span>
                   <span className="detail-val">
                     <a 
                       href={selected.paymentProof} 
@@ -441,7 +441,7 @@ export default function AdminDashboard() {
                       className="btn-link"
                       style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'underline' }}
                     >
-                      View Screenshot
+                      View Payment Screenshot
                     </a>
                   </span>
                 </div>

@@ -14,35 +14,18 @@ export default function Registration() {
   const [isDisabled, setIsDisabled] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [form, setForm] = useState({
     teamName: '', track: '', leaderName: '', leaderEmail: '', leaderPhone: '',
     leaderCollege: '', member2: '', member3: '', member4: '',
     ideaTitle: '', ideaBrief: '', ideaFile: '', disabilityProof: '',
-    transactionId: '', paymentDate: '', payerName: '',
+    ideaTitle: '', ideaBrief: '', ideaFile: '', disabilityProof: '',
+    transactionId: '', paymentDate: '', payerName: '', paymentProof: '',
   });
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const handleFileChange = (e, type) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        alert('File size exceeds 10MB limit.');
-        e.target.value = null;
-        return;
-      }
-      const ext = selectedFile.name.split('.').pop().toLowerCase();
-      
-      if (type === 'payment') {
-        if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
-          alert('Invalid image type. Only JPG, PNG, and WEBP are allowed.');
-          e.target.value = null;
-          return;
-        }
-        setPaymentScreenshot(selectedFile);
-      }
-    }
+    // Legacy file handler removed
   };
 
   const fee = isDisabled ? 0 : mode === 'solo' ? 200 : 400;
@@ -50,25 +33,28 @@ export default function Registration() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!isDisabled && !paymentScreenshot) {
-      alert('Please upload your payment screenshot.');
+    if (!isDisabled && !form.paymentProof) {
+      alert('Please provide your payment screenshot URL.');
       return;
     }
 
     setLoading(true);
     try {
-      const formData = new FormData();
-      Object.keys(form).forEach(key => formData.append(key, form[key]));
-      formData.append('disabled', isDisabled);
-      formData.append('mode', mode);
+      const payload = {
+        ...form,
+        disabled: isDisabled,
+        mode,
+      };
       
-      if (paymentScreenshot) {
-        formData.append('paymentProof', paymentScreenshot);
-      }
+      // Removed manual file appends since FormData already captures form.paymentProof
+
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/register`, {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -288,7 +274,7 @@ export default function Registration() {
                   </div>
                 </div>
 
-                <h3 className="form-section-title" style={{ marginTop: '24px' }}>💰 Payment Proof Upload (Backup)</h3>
+                <h3 className="form-section-title" style={{ marginTop: '24px' }}>💰 Payment Proof URL (Backup)</h3>
                 <div className="form-row">
                   <div className="form-group">
                     <label>UPI Transaction ID *</label>
@@ -309,8 +295,8 @@ export default function Registration() {
                       value={form.paymentDate} onChange={e => set('paymentDate', e.target.value)} />
                   </div>
                   <div className="form-group">
-                    <label>Screenshot Upload *</label>
-                    <input required type="file" accept="image/*" onChange={e => handleFileChange(e, 'payment')} />
+                    <label>Screenshot URL * <span className="label-hint">(Google Drive link)</span></label>
+                    <input required type="url" placeholder="https://..." value={form.paymentProof} onChange={e => set('paymentProof', e.target.value)} />
                   </div>
                 </div>
               </>

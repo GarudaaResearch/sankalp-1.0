@@ -1,19 +1,10 @@
 const express   = require('express');
 const cors      = require('cors');
 const { Pool }  = require('pg');
-const multer    = require('multer');
-const cloudinary = require('cloudinary').v2;
 require('dotenv').config();
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
-
-// ── Cloudinary ───────────────────────────────────────────────────────────────
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(cors());
@@ -61,33 +52,7 @@ async function createTable() {
 }
 createTable();
 
-// ── Multer (memory storage → Cloudinary) ─────────────────────────────────────
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-  fileFilter: (req, file, cb) => {
-    const ext = file.originalname.split('.').pop().toLowerCase();
-    if (file.fieldname === 'paymentProof') {
-      if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) return cb(null, true);
-      return cb(new Error('Only JPG, PNG, WEBP allowed for payment proof.'));
-    }
-    cb(null, true);
-  },
-});
-
-// Helper: upload buffer → Cloudinary, return secure_url
-function uploadToCloudinary(buffer, folder, resourceType = 'raw') {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: resourceType },
-      (error, result) => {
-        if (error) reject(error);
-        else resolve(result.secure_url);
-      }
-    );
-    stream.end(buffer);
-  });
-}
+// No file uploads; using direct URLs
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 
@@ -102,30 +67,17 @@ app.get('/api/registrations', async (req, res) => {
 });
 
 // POST new registration
-app.post(
-  '/api/register',
-  upload.fields([
-    { name: 'paymentProof', maxCount: 1 },
-  ]),
-  async (req, res) => {
+app.post('/api/register', async (req, res) => {
     try {
       const {
         teamName, track, leaderName, leaderEmail, leaderPhone,
         leaderCollege, member2, member3, member4,
         ideaTitle, ideaBrief, ideaFile, disabilityProof, disabled,
-        transactionId, paymentDate, payerName,
+        transactionId, paymentDate, payerName, paymentProof
       } = req.body;
 
-      // Upload files to Cloudinary if provided
       let ideaFileUrl     = ideaFile || null;
-      let paymentProofUrl = null;
-      if (req.files?.['paymentProof']?.[0]) {
-        paymentProofUrl = await uploadToCloudinary(
-          req.files['paymentProof'][0].buffer,
-          'rcas-sankalp/payments',
-          'image'
-        );
-      }
+      let paymentProofUrl = paymentProof || null;
 
       const query = `
         INSERT INTO registrations (
